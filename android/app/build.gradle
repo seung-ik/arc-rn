@@ -84,6 +84,11 @@ android {
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1
         versionName "1.0"
+        
+        // WEPIN SDK 설정
+        manifestPlaceholders = [
+            appAuthRedirectScheme: "com.wepinwalletapp"
+        ]
     }
     signingConfigs {
         debug {
