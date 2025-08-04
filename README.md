@@ -1,97 +1,120 @@
-This is a new [**React Native**](https://reactnative.dev) project, bootstrapped using [`@react-native-community/cli`](https://github.com/react-native-community/cli).
+# WEPIN Wallet App
 
-# Getting Started
+React Native 기반 WEPIN 지갑 앱으로, WebView를 통해 Next.js 웹앱과 양방향 통신을 구현합니다.
 
-> **Note**: Make sure you have completed the [Set Up Your Environment](https://reactnative.dev/docs/set-up-your-environment) guide before proceeding.
+## 🚀 주요 기능
 
-## Step 1: Start Metro
+- **WEPIN SDK 연동**: React Native에서 WEPIN 지갑 로그인 및 관리
+- **WebView 통신**: postMessage를 통한 양방향 메시지 교환
+- **트랜잭션 처리**: 웹앱에서 요청한 트랜잭션을 앱에서 처리
+- **세션 관리**: 로그인 상태 및 사용자 정보 관리
 
-First, you will need to run **Metro**, the JavaScript build tool for React Native.
+## 📱 메시지 통신 구조
 
-To start the Metro dev server, run the following command from the root of your React Native project:
+### RN → Web (앱에서 웹으로)
 
-```sh
-# Using npm
-npm start
-
-# OR using Yarn
-yarn start
+```javascript
+{
+  type: "LOGIN_SUCCESS",
+  payload: {
+    uid: "user_123",
+    walletAddress: "0x123...",
+    email: "user@example.com"
+  }
+}
 ```
 
-## Step 2: Build and run your app
+### Web → RN (웹에서 앱으로)
 
-With Metro running, open a new terminal window/pane from the root of your React Native project, and use one of the following commands to build and run your Android or iOS app:
-
-### Android
-
-```sh
-# Using npm
-npm run android
-
-# OR using Yarn
-yarn android
+```javascript
+{
+  type: "REQUEST_TRANSACTION",
+  payload: {
+    to: "0xabc...",
+    value: "0.01"
+  }
+}
 ```
 
-### iOS
+## 🛠 설치 및 실행
 
-For iOS, remember to install CocoaPods dependencies (this only needs to be run on first clone or after updating native deps).
+### 필수 요구사항
 
-The first time you create a new project, run the Ruby bundler to install CocoaPods itself:
+- Node.js 18+
+- React Native CLI
+- Xcode (iOS)
+- Android Studio (Android)
 
-```sh
+### 설치
+
+```bash
+# 의존성 설치
+npm install
+
+# iOS 설정
+cd ios
 bundle install
-```
-
-Then, and every time you update your native dependencies, run:
-
-```sh
 bundle exec pod install
+cd ..
 ```
 
-For more information, please visit [CocoaPods Getting Started guide](https://guides.cocoapods.org/using/getting-started.html).
+### 실행
 
-```sh
-# Using npm
-npm run ios
+```bash
+# iOS
+npx react-native run-ios
 
-# OR using Yarn
-yarn ios
+# Android
+npx react-native run-android
 ```
 
-If everything is set up correctly, you should see your new app running in the Android Emulator, iOS Simulator, or your connected device.
+## 📁 프로젝트 구조
 
-This is one way to run your app — you can also build it directly from Android Studio or Xcode.
+```
+WepinWalletApp/
+├── App.tsx                 # 메인 앱 컴포넌트
+├── ios/                    # iOS 네이티브 코드
+├── android/                # Android 네이티브 코드
+├── package.json            # 프로젝트 의존성
+└── README.md              # 프로젝트 문서
+```
 
-## Step 3: Modify your app
+## 🔧 주요 컴포넌트
 
-Now that you have successfully run the app, let's make changes!
+### App.tsx
 
-Open `App.tsx` in your text editor of choice and make some changes. When you save, your app will automatically update and reflect these changes — this is powered by [Fast Refresh](https://reactnative.dev/docs/fast-refresh).
+- WebView 컴포넌트 관리
+- postMessage 통신 처리
+- 로그인/로그아웃 상태 관리
+- 트랜잭션 요청 처리
 
-When you want to forcefully reload, for example to reset the state of your app, you can perform a full reload:
+### 메시지 타입
 
-- **Android**: Press the <kbd>R</kbd> key twice or select **"Reload"** from the **Dev Menu**, accessed via <kbd>Ctrl</kbd> + <kbd>M</kbd> (Windows/Linux) or <kbd>Cmd ⌘</kbd> + <kbd>M</kbd> (macOS).
-- **iOS**: Press <kbd>R</kbd> in iOS Simulator.
+- `LOGIN_SUCCESS`: 로그인 성공 시 웹으로 전송
+- `LOGOUT`: 로그아웃 시 웹으로 전송
+- `REQUEST_TRANSACTION`: 웹에서 트랜잭션 요청
+- `TRANSACTION_RESULT`: 트랜잭션 결과를 웹으로 전송
+- `WALLET_INFO`: 지갑 정보 요청/응답
 
-## Congratulations! :tada:
+## 🔐 보안 고려사항
 
-You've successfully run and modified your React Native App. :partying_face:
+- 민감한 지갑 정보는 안전한 방식으로 전달
+- 트랜잭션 승인은 사용자 확인 후 처리
+- WebView 통신은 JSON 형태로 검증된 메시지만 처리
 
-### Now what?
+## 🚧 TODO
 
-- If you want to add this new React Native code to an existing application, check out the [Integration guide](https://reactnative.dev/docs/integration-with-existing-apps).
-- If you're curious to learn more about React Native, check out the [docs](https://reactnative.dev/docs/getting-started).
+- [ ] 실제 WEPIN SDK 연동
+- [ ] 트랜잭션 서명 구현
+- [ ] 에러 처리 강화
+- [ ] 보안 강화
+- [ ] 테스트 코드 작성
 
-# Troubleshooting
+## 📞 지원
 
-If you're having issues getting the above steps to work, see the [Troubleshooting](https://reactnative.dev/docs/troubleshooting) page.
+문제가 발생하거나 질문이 있으시면 이슈를 생성해주세요.
 
-# Learn More
+## �� 라이선스
 
-To learn more about React Native, take a look at the following resources:
-
-- [React Native Website](https://reactnative.dev) - learn more about React Native.
-- [Getting Started](https://reactnative.dev/docs/environment-setup) - an **overview** of React Native and how setup your environment.
-- [Learn the Basics](https://reactnative.dev/docs/getting-started) - a **guided tour** of the React Native **basics**.
-- [Blog](https://reactnative.dev/blog) - read the latest official React Native **Blog** posts.
-- [`@facebook/react-native`](https://github.com/facebook/react-native) - the Open Source; GitHub **repository** for React Native.
+MIT License
+# arc-rn
