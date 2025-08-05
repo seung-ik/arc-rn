@@ -185,3 +185,4 @@ MIT License
 
 https://github.com/WepinWallet/wepin-react-native-sdk
 https://docs.wepin.io/widget-integration/react-native-sdk/login-library/methods
+https://github.com/WepinWallet/wepin-react-native-sdk/blob/main/example/App.tsx
