@@ -165,6 +165,20 @@ WepinWalletApp/
 
 문제가 발생하거나 질문이 있으시면 이슈를 생성해주세요.
 
+현재 상황 정리:
+✅ 이미 구현된 부분:
+WEPIN SDK 위젯 방식 로그인 (기존 코드)
+wepin.setUserInfo() 메서드 존재 확인
+❌ 아직 안 되는 부분:
+WepinLogin OAuth 로그인 (Google 클라이언트 ID 필요)
+wepin.setUserInfo(userInfo) 연동
+�� 완성되면 가능한 것:
+WepinLogin으로 로그인 → userInfo 획득
+WEPIN SDK에 주입 → wepin.setUserInfo(userInfo)
+이제 위젯도 사용 가능 → wepin.openWidget(), wepin.getStatus() 등
+결론: Google 클라이언트 ID만 발급받으면 WepinLogin 로그인 → WEPIN SDK 연동 → 위젯 사용까지 모두 가능해집니다!
+현재는 Google 클라이언트 ID가 없어서 WepinLogin 부분만 안 되는 상태입니다.
+
 ## 📄 라이선스
 
 MIT License
