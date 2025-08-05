@@ -182,3 +182,6 @@ WEPIN SDK에 주입 → wepin.setUserInfo(userInfo)
 ## 📄 라이선스
 
 MIT License
+
+https://github.com/WepinWallet/wepin-react-native-sdk
+https://docs.wepin.io/widget-integration/react-native-sdk/login-library/methods

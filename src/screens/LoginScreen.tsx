@@ -7,11 +7,12 @@ import {
   StatusBar,
   useColorScheme,
   Alert,
+  Linking,
 } from 'react-native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import Wepin from '@wepin/react-native-sdk';
 import WepinLogin from '@wepin/login-rn';
-import { UserInfo, RootStackParamList } from '../types';
+import { RootStackParamList } from '../types';
 
 type LoginScreenNavigationProp = StackNavigationProp<
   RootStackParamList,
@@ -25,68 +26,32 @@ interface LoginScreenProps {
 function LoginScreen({ navigation }: LoginScreenProps) {
   const isDarkMode = useColorScheme() === 'dark';
   const [isInitialized, setIsInitialized] = useState(false);
+  const [wepinLogin, setWepinLogin] = useState<WepinLogin | null>(null);
 
   // WEPIN SDK 초기화
   useEffect(() => {
     const initializeWepin = async () => {
       try {
-        // WEPIN 인스턴스 생성
         const wepin = Wepin.getInstance();
-
-        // 간단한 초기화 설정
-        const initConfig = {
-          type: 'show',
-          defaultLanguage: 'ko',
-          defaultCurrency: 'KRW',
-          loginProviders: ['google'],
-        };
-
-        // SDK 초기화
-        await wepin.init(
+        console.log(wepin, 'wepin');
+        const initResult = await wepin.init(
           '3f2b52c0c69e1c63ad720046a6977c0b',
-          'ak_live_ResNPBBNFcY0rzkq7v35Gj5QrM3TKCIPjlOIRM7zEHU',
-          initConfig,
+          'ak_live_nyLcIlDwtwbhw16y0Qvo9lKuuF2DkuFqnRQX1tj34MR',
         );
+        console.log(initResult, 'initResult');
 
-        // 초기화 완료 후 로그인 상태 확인
-        try {
-          // WepinLogin 인스턴스 생성 및 초기화
-          const wepinLogin = new WepinLogin({
-            appId: '3f2b52c0c69e1c63ad720046a6977c0b',
-            appKey: 'ak_live_ResNPBBNFcY0rzkq7v35Gj5QrM3TKCIPjlOIRM7zEHU',
-          });
+        const loginInstance = new WepinLogin({
+          appId: '3f2b52c0c69e1c63ad720046a6977c0b',
+          appKey: 'ak_live_nyLcIlDwtwbhw16y0Qvo9lKuuF2DkuFqnRQX1tj34MR',
+        });
 
-          await wepinLogin.init();
-
-          try {
-            const currentUser = await wepinLogin.getCurrentWepinUser();
-
-            if (
-              currentUser &&
-              currentUser.status === 'success' &&
-              currentUser.userInfo
-            ) {
-              const userInfo: UserInfo = {
-                uid: currentUser.userInfo.userId || 'user_' + Date.now(),
-                walletAddress:
-                  currentUser.walletId ||
-                  '0x' + Math.random().toString(16).substr(2, 40),
-                email: currentUser.userInfo.email || 'user@example.com',
-                token:
-                  currentUser.token?.accessToken || 'wepin_token_' + Date.now(),
-              };
-
-              navigation.replace('WebView', { userInfo });
-              return;
-            }
-          } catch (loginError: any) {
-            // 로그인되지 않은 상태 - 정상적인 상황
-          }
-        } catch (error) {
-          // WepinLogin 초기화 실패 - 정상적인 상황
+        await loginInstance.init();
+        if (loginInstance.isInitialized()) {
+          // Success to initialize WepinLogin
+          console.log('WEPIN SDK 초기화 성공');
+          setWepinLogin(loginInstance);
+          setIsInitialized(true);
         }
-
-        setIsInitialized(true);
       } catch (error) {
         console.error('WEPIN SDK 초기화 오류:', error);
         setIsInitialized(true);
@@ -94,56 +59,71 @@ function LoginScreen({ navigation }: LoginScreenProps) {
     };
 
     initializeWepin();
-  }, [navigation]);
+  }, []);
+
+  // 로그아웃 함수
+  const handleLogout = async () => {
+    try {
+      const wepin = Wepin.getInstance();
+      await wepin.logout();
+      console.log('WEPIN 로그아웃 성공');
+      Alert.alert('로그아웃 완료', 'WEPIN에서 로그아웃되었습니다.');
+    } catch (error: any) {
+      console.error('WEPIN 로그아웃 오류:', error.message || error);
+      Alert.alert('로그아웃 실패', '로그아웃 중 오류가 발생했습니다.');
+    }
+  };
 
   // 실제 WEPIN Google 로그인 함수
   const handleLogin = async () => {
-    if (!isInitialized) {
+    console.log(1);
+    console.log('isInitialized:', isInitialized);
+    console.log('wepinLogin:', wepinLogin);
+
+    if (!isInitialized || !wepinLogin) {
+      console.log(2);
       Alert.alert('초기화 필요', 'WEPIN SDK가 아직 초기화되지 않았습니다.');
       return;
     }
-
+    console.log(3);
     try {
-      // WepinLogin 인스턴스 생성 및 초기화
-      const wepinLogin = new WepinLogin({
-        appId: '3f2b52c0c69e1c63ad720046a6977c0b',
-        appKey: 'ak_live_ResNPBBNFcY0rzkq7v35Gj5QrM3TKCIPjlOIRM7zEHU',
-      });
+      console.log('OAuth 로그인 시작...');
+      console.log('WEPIN 인스턴스 상태:', wepinLogin._isInitialized);
+      console.log('WEPIN 인스턴스:', wepinLogin);
 
-      await wepinLogin.init();
+      // WEPIN SDK가 초기화되었는지 확인
+      if (!wepinLogin._isInitialized) {
+        throw new Error('WEPIN SDK가 초기화되지 않았습니다.');
+      }
 
-      // 1. OAuth 로그인 (Google)
       const oauthResult = await wepinLogin.loginWithOauthProvider({
         provider: 'google',
-        clientId: 'your-google-client-id', // Google OAuth 클라이언트 ID 필요
+        clientId:
+          '1012292393537-fofiieobpcsbvl48vqkbemf913d3f7gf.apps.googleusercontent.com', // Google OAuth 클라이언트 ID
       });
 
-      // 2. Firebase Token으로 WEPIN 로그인
-      const wepinUser = await wepinLogin.loginWepin({
-        provider: oauthResult.provider,
-        token: {
-          idToken: oauthResult.token,
-          refreshToken: oauthResult.token,
-        },
+      const wepinUser = await wepinLogin.loginWithIdToken({
+        token: oauthResult.token,
       });
 
-      // 3. WEPIN SDK에 사용자 정보 설정
-      const wepin = Wepin.getInstance();
-      wepin.setUserInfo(wepinUser);
-
-      // 4. 사용자 정보 구성
-      const userInfo: UserInfo = {
-        uid: wepinUser.userInfo?.userId || 'user_' + Date.now(),
-        walletAddress:
-          wepinUser.walletId || '0x' + Math.random().toString(16).substr(2, 40),
-        email: wepinUser.userInfo?.email || 'user@example.com',
-        token: wepinUser.token?.accessToken || 'wepin_token_' + Date.now(),
-      };
+      console.log(oauthResult, wepinUser);
+      console.log('OAuth 로그인 성공!');
 
       Alert.alert('로그인 성공', 'WEPIN 지갑에 로그인되었습니다.');
-      navigation.replace('WebView', { userInfo });
+      navigation.replace('WebView', {
+        userInfo: {
+          uid: 'string',
+          walletAddress: 'string',
+          email: 'string',
+          token: 'string',
+        },
+      });
     } catch (error: any) {
-      console.error('WEPIN 로그인 오류:', error.message || error);
+      console.error('WEPIN 로그인 오류 발생!');
+      console.error('Error type:', typeof error);
+      console.error('Error message:', error.message);
+      console.error('Error stack:', error.stack);
+      console.error('Full error:', error);
       Alert.alert(
         '로그인 실패',
         `WEPIN 로그인 중 오류가 발생했습니다: ${
@@ -179,26 +159,35 @@ function LoginScreen({ navigation }: LoginScreenProps) {
             </Text>
           </TouchableOpacity>
 
-          {/* 임시 테스트 버튼 - 로그인 성공 후 수동 이동용 */}
+          {/* 로그아웃 버튼 */}
           <TouchableOpacity
+            style={[
+              styles.logoutButton,
+              !isInitialized && styles.disabledButton,
+            ]}
+            onPress={handleLogout}
+            disabled={!isInitialized}
+          >
+            <Text style={styles.logoutButtonText}>로그아웃</Text>
+          </TouchableOpacity>
+
+          {/* 임시 테스트 버튼 - 로그인 성공 후 수동 이동용 */}
+          {/* <TouchableOpacity
             style={[
               styles.loginButton,
               { marginTop: 10, backgroundColor: '#28a745' },
             ]}
             onPress={async () => {
               try {
-                // WepinLogin 인스턴스 생성 및 초기화
-                const wepinLogin = new WepinLogin({
-                  appId: '3f2b52c0c69e1c63ad720046a6977c0b',
-                  appKey: 'ak_live_ResNPBBNFcY0rzkq7v35Gj5QrM3TKCIPjlOIRM7zEHU',
-                });
-
-                await wepinLogin.init();
+                if (!wepinLogin) {
+                  throw new Error('WEPIN SDK가 초기화되지 않았습니다.');
+                }
 
                 // 1. OAuth 로그인 (Google)
                 const oauthResult = await wepinLogin.loginWithOauthProvider({
                   provider: 'google',
-                  clientId: 'your-google-client-id', // Google OAuth 클라이언트 ID 필요
+                  clientId:
+                    '1012292393537-fofiieobpcsbvl48vqkbemf913d3f7gf.apps.googleusercontent.com', // Google OAuth 클라이언트 ID
                 });
 
                 // 2. Firebase Token으로 WEPIN 로그인
@@ -240,7 +229,7 @@ function LoginScreen({ navigation }: LoginScreenProps) {
             <Text style={styles.loginButtonText}>
               테스트: 실제 WEPIN 정보로 이동
             </Text>
-          </TouchableOpacity>
+          </TouchableOpacity> */}
 
           <Text style={[styles.description, isDarkMode && styles.darkText]}>
             로그인 후 trivus.net에서 지갑을 사용할 수 있습니다.
@@ -293,6 +282,18 @@ const styles = StyleSheet.create({
     backgroundColor: '#CCCCCC',
   },
   loginButtonText: {
+    color: '#ffffff',
+    fontSize: 18,
+    fontWeight: '600',
+  },
+  logoutButton: {
+    backgroundColor: '#FF3B30',
+    paddingHorizontal: 40,
+    paddingVertical: 15,
+    borderRadius: 25,
+    marginBottom: 20,
+  },
+  logoutButtonText: {
     color: '#ffffff',
     fontSize: 18,
     fontWeight: '600',
