@@ -50,7 +50,7 @@ function AppContent() {
 
           if (currentUser && currentUser.status === 'success') {
             // 로그인된 상태면 WebView로 이동
-            setInitialRoute('WebView');
+            setInitialRoute('Login');
           } else {
             // 로그인되지 않은 상태면 Login으로 이동
             setInitialRoute('Login');

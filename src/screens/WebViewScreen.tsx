@@ -36,7 +36,7 @@ function WebViewScreen({ navigation }: WebViewScreenProps) {
       navigation.replace('Login');
       return false;
     }
-
+    console.log('초기화 완료');
     return true;
   };
 
@@ -59,19 +59,18 @@ function WebViewScreen({ navigation }: WebViewScreenProps) {
     if (!(await checkWepinStatus())) {
       return;
     }
-
     if (webViewRef.current && wepinLogin) {
+      console.log(1);
       try {
         const userData = await wepinLogin.getCurrentWepinUser();
-        console.log('현재 WEPIN 사용자 정보:', userData);
-
+        console.log('userData', userData);
         if (userData && userData.status === 'success') {
           const message = {
             type: 'WEPIN_USER_DATA',
-            payload: userData,
+            payload: { wepinUser: userData, idToken: '' },
           };
-          console.log('웹으로 전달할 WEPIN 사용자 정보:', userData);
           webViewRef.current.postMessage(JSON.stringify(message));
+          console.log(3);
         } else {
           console.log(
             'WEPIN 사용자 정보가 없거나 로그인되지 않음, 로그인 화면으로 이동',
@@ -94,17 +93,8 @@ function WebViewScreen({ navigation }: WebViewScreenProps) {
       console.log('WebView에서 받은 메시지:', data);
 
       switch (data.type) {
-        case 'WEPIN_ACCOUNTS_LOADED':
-          console.log('WEPIN 계정 정보 로드 완료:', data.payload);
-          // 백엔드 로그인 처리 후 토큰 받기
-          break;
-        case 'BACKEND_LOGIN_SUCCESS':
-          console.log('백엔드 로그인 성공:', data.payload);
-          // 토큰을 받아서 앱에서 사용
-          break;
-        case 'LOGOUT':
-          // 로그인 화면으로 돌아가기
-          navigation.replace('Login');
+        case 'DEBUG_LOG':
+          console.log('🌐 웹뷰 디버그 로그:', data.message);
           break;
         default:
           console.log('알 수 없는 메시지 타입:', data.type);
@@ -120,7 +110,7 @@ function WebViewScreen({ navigation }: WebViewScreenProps) {
 
       <WebView
         ref={webViewRef}
-        source={{ uri: 'https://trivus.net/login-bridge' }}
+        source={{ uri: 'https://trivus.net/auth/login-bridge' }}
         style={styles.webview}
         onMessage={handleWebViewMessage}
         onLoadEnd={sendWepinUserToWeb}
@@ -129,6 +119,7 @@ function WebViewScreen({ navigation }: WebViewScreenProps) {
         startInLoadingState={true}
         allowsInlineMediaPlayback={true}
         mediaPlaybackRequiresUserAction={false}
+        originWhitelist={['*']}
       />
     </View>
   );

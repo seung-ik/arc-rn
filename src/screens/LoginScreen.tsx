@@ -101,9 +101,6 @@ function LoginScreen({ navigation }: LoginScreenProps) {
         console.log('WEPIN 로그인 결과:', wepinUser);
 
         if (wepinUser && wepinUser.status === 'success') {
-          console.log('WEPIN 로그인 성공!');
-
-          // WebView로 이동
           navigation.replace('WebView');
         } else {
           console.error('WEPIN 로그인 실패:', wepinUser);
