@@ -12,6 +12,7 @@ import WebViewScreen from './src/screens/WebViewScreen';
 import { RootStackParamList } from './src/types';
 import './shim';
 import { Linking } from 'react-native';
+import Wepin from '@wepin/react-native-sdk';
 
 const Stack = createStackNavigator<RootStackParamList>();
 
@@ -40,19 +41,21 @@ function App() {
   }, []);
 
   return (
-    <GestureHandlerRootView style={{ flex: 1 }}>
-      <NavigationContainer>
-        <Stack.Navigator
-          initialRouteName="Login"
-          screenOptions={{
-            headerShown: false, // 헤더 숨기기
-          }}
-        >
-          <Stack.Screen name="Login" component={LoginScreen} />
-          <Stack.Screen name="WebView" component={WebViewScreen} />
-        </Stack.Navigator>
-      </NavigationContainer>
-    </GestureHandlerRootView>
+    <Wepin.WidgetView>
+      <GestureHandlerRootView style={{ flex: 1 }}>
+        <NavigationContainer>
+          <Stack.Navigator
+            initialRouteName="Login"
+            screenOptions={{
+              headerShown: false, // 헤더 숨기기
+            }}
+          >
+            <Stack.Screen name="Login" component={LoginScreen} />
+            <Stack.Screen name="WebView" component={WebViewScreen} />
+          </Stack.Navigator>
+        </NavigationContainer>
+      </GestureHandlerRootView>
+    </Wepin.WidgetView>
   );
 }
 

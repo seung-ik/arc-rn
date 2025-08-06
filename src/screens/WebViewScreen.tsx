@@ -3,7 +3,6 @@ import { View, StyleSheet, StatusBar, Alert } from 'react-native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RouteProp } from '@react-navigation/native';
 import { WebView } from 'react-native-webview';
-import Wepin from '@wepin/react-native-sdk';
 import { RootStackParamList } from '../types';
 
 type WebViewScreenNavigationProp = StackNavigationProp<
@@ -55,24 +54,22 @@ function WebViewScreen({ navigation, route }: WebViewScreenProps) {
   };
 
   return (
-    <Wepin.WidgetView>
-      <View style={styles.container}>
-        <StatusBar barStyle="light-content" />
+    <View style={styles.container}>
+      <StatusBar barStyle="light-content" />
 
-        <WebView
-          ref={webViewRef}
-          source={{ uri: 'https://trivus.net' }}
-          style={styles.webview}
-          onMessage={handleWebViewMessage}
-          onLoadEnd={sendMessageToWeb}
-          javaScriptEnabled={true}
-          domStorageEnabled={true}
-          startInLoadingState={true}
-          allowsInlineMediaPlayback={true}
-          mediaPlaybackRequiresUserAction={false}
-        />
-      </View>
-    </Wepin.WidgetView>
+      <WebView
+        ref={webViewRef}
+        source={{ uri: 'https://trivus.net' }}
+        style={styles.webview}
+        onMessage={handleWebViewMessage}
+        onLoadEnd={sendMessageToWeb}
+        javaScriptEnabled={true}
+        domStorageEnabled={true}
+        startInLoadingState={true}
+        allowsInlineMediaPlayback={true}
+        mediaPlaybackRequiresUserAction={false}
+      />
+    </View>
   );
 }
 
