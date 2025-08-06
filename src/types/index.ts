@@ -7,5 +7,5 @@ export interface UserInfo {
 
 export type RootStackParamList = {
   Login: undefined;
-  WebView: { userInfo: UserInfo };
+  WebView: undefined; // 파라미터 제거
 };

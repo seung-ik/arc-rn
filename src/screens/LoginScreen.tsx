@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect } from 'react';
 import {
   View,
   Text,
@@ -9,10 +9,9 @@ import {
   Alert,
 } from 'react-native';
 import { StackNavigationProp } from '@react-navigation/stack';
-import Wepin from '@wepin/react-native-sdk';
-import WepinLogin from '@wepin/login-rn';
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
 import { RootStackParamList } from '../types';
+import { useWepin } from '../context/WepinContext';
 
 type LoginScreenNavigationProp = StackNavigationProp<
   RootStackParamList,
@@ -25,13 +24,11 @@ interface LoginScreenProps {
 
 function LoginScreen({ navigation }: LoginScreenProps) {
   const isDarkMode = useColorScheme() === 'dark';
-  const [isInitialized, setIsInitialized] = useState(false);
-  const [wepinLogin, setWepinLogin] = useState<WepinLogin | null>(null);
-  const [wepinSdk, setWepinSdk] = useState<Wepin | null>(null);
+  const { wepinSdk, wepinLogin, isInitialized } = useWepin();
 
-  // WEPIN SDK 초기화
+  // 구글 로그인 초기화
   useEffect(() => {
-    const initializeWepin = async () => {
+    const initializeGoogleSignIn = async () => {
       try {
         // 구글 로그인 초기화
         GoogleSignin.configure({
@@ -40,56 +37,18 @@ function LoginScreen({ navigation }: LoginScreenProps) {
           offlineAccess: true,
         });
         console.log('✅ 구글 로그인 초기화 완료');
-
-        const wepinInstance = Wepin.getInstance();
-        await wepinInstance.init(
-          '3f2b52c0c69e1c63ad720046a6977c0b',
-          'ak_live_nyLcIlDwtwbhw16y0Qvo9lKuuF2DkuFqnRQX1tj34MR',
-        );
-
-        const loginInstance = new WepinLogin({
-          appId: '3f2b52c0c69e1c63ad720046a6977c0b',
-          appKey: 'ak_live_nyLcIlDwtwbhw16y0Qvo9lKuuF2DkuFqnRQX1tj34MR',
-        });
-
-        await loginInstance.init();
-        if (loginInstance.isInitialized()) {
-          // Success to initialize WepinLogin
-          console.log('WEPIN SDK 초기화 성공');
-          setWepinSdk(wepinInstance);
-          setWepinLogin(loginInstance);
-          setIsInitialized(true);
-        }
       } catch (error) {
-        console.error('WEPIN SDK 초기화 오류:', error);
+        console.error('구글 로그인 초기화 오류:', error);
       }
     };
 
-    initializeWepin();
+    initializeGoogleSignIn();
   }, []);
 
   // 로그아웃 함수
   const handleLogout = async () => {
     try {
       console.log('=== 로그아웃 시작 ===');
-
-      // 구글 로그아웃
-      try {
-        await GoogleSignin.signOut();
-        console.log('✅ 구글 로그아웃 성공');
-      } catch (googleError) {
-        console.error('❌ 구글 로그아웃 실패:', googleError);
-      }
-
-      // WEPIN 로그아웃
-      try {
-        if (wepinSdk) {
-          await wepinSdk.logout();
-          console.log('✅ WEPIN 로그아웃 성공');
-        }
-      } catch (wepinError) {
-        console.error('❌ WEPIN 로그아웃 실패:', wepinError);
-      }
 
       // WEPIN Login 로그아웃
       try {
@@ -106,56 +65,6 @@ function LoginScreen({ navigation }: LoginScreenProps) {
     } catch (error: any) {
       console.error('❌ 로그아웃 중 오류:', error.message || error);
       Alert.alert('로그아웃 실패', '로그아웃 중 오류가 발생했습니다.');
-    }
-  };
-
-  // 실제 WEPIN Google 로그인 함수
-  const handleLogin = async () => {
-    if (!isInitialized || !wepinLogin) {
-      console.log(2);
-      Alert.alert('초기화 필요', 'WEPIN SDK가 아직 초기화되지 않았습니다.');
-      return;
-    }
-    console.log(3);
-    try {
-      if (!wepinLogin._isInitialized) {
-        throw new Error('WEPIN SDK가 초기화되지 않았습니다.');
-      }
-
-      const oauthResult = await wepinLogin.loginWithOauthProvider({
-        provider: 'google',
-        clientId:
-          '1012292393537-fofiieobpcsbvl48vqkbemf913d3f7gf.apps.googleusercontent.com', // Google OAuth 클라이언트 ID
-      });
-
-      const wepinUser = await wepinLogin.loginWithIdToken({
-        token: oauthResult.token,
-      });
-
-      console.log(oauthResult, wepinUser);
-      console.log('OAuth 로그인 성공!');
-
-      Alert.alert('로그인 성공', 'WEPIN 지갑에 로그인되었습니다.');
-      navigation.replace('WebView', {
-        userInfo: {
-          uid: 'string',
-          walletAddress: 'string',
-          email: 'string',
-          token: 'string',
-        },
-      });
-    } catch (error: any) {
-      console.error('WEPIN 로그인 오류 발생!');
-      console.error('Error type:', typeof error);
-      console.error('Error message:', error.message);
-      console.error('Error stack:', error.stack);
-      console.error('Full error:', error);
-      Alert.alert(
-        '로그인 실패',
-        `WEPIN 로그인 중 오류가 발생했습니다: ${
-          error.message || '알 수 없는 오류'
-        }`,
-      );
     }
   };
 
@@ -189,7 +98,20 @@ function LoginScreen({ navigation }: LoginScreenProps) {
           },
         });
 
-        console.log(wepinUser, 'wepinUser');
+        console.log('WEPIN 로그인 결과:', wepinUser);
+
+        if (wepinUser && wepinUser.status === 'success') {
+          console.log('WEPIN 로그인 성공!');
+
+          // WebView로 이동
+          navigation.replace('WebView');
+        } else {
+          console.error('WEPIN 로그인 실패:', wepinUser);
+          Alert.alert(
+            '로그인 실패',
+            'WEPIN 로그인에 실패했습니다. 다시 시도해주세요.',
+          );
+        }
       }
     } catch (error: any) {
       Alert.alert(
@@ -213,7 +135,7 @@ function LoginScreen({ navigation }: LoginScreenProps) {
 
         <TouchableOpacity
           style={[styles.loginButton, !isInitialized && styles.disabledButton]}
-          onPress={handleLogin}
+          onPress={handleGoogleSignInTest}
           disabled={!isInitialized}
         >
           <Text style={styles.loginButtonText}>
